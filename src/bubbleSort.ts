@@ -1,5 +1,13 @@
 import type { CompareFunction } from './types';
 
+/**
+ * Bubble sort.
+ *
+ * @param array -
+ * @param compare -
+ *
+ * @returns - new sorted array.
+ */
 export function bubbleSort<T>(array: T[], compare: CompareFunction<T>): T[] {
     const sorted = array.slice(0);
     let len = sorted.length ;

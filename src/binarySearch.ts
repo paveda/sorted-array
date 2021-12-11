@@ -10,10 +10,12 @@ export function binarySearch<T>(
     let high = array.length - 1;
     let low = 0;
     let pos = -1;
+    let mid = 0;
+    let ordering = 0;
 
     while (high >= low) {
-        const mid = (high + low) / 2 >>> 0;
-        const ordering = compare(array[mid], element);
+        mid = (high + low) / 2 >>> 0;
+        ordering = compare(array[mid], element);
         if (ordering < 0) {
             low  = mid + 1;
         } else if (ordering > 0) {
