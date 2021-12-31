@@ -1,218 +1,152 @@
-import type { Index, Size, CompareFunction } from './types';
-import { bubbleSort } from './bubbleSort';
-import { binarySearch } from "./binarySearch";
+import { Comparator } from "./types";
+import {binarySearch} from "./helpers";
 
-/**
- *
- */
-export class SortedArray<T = number> {
-    private readonly array: T[] = [];
-    private readonly compare: CompareFunction<T>;
-
-    /**
-     *
-     * @param array -
-     * @param compareFunction -
-     */
-    constructor(array: T[], compareFunction: CompareFunction<T>) {
-        this.compare = compareFunction;
-        this.array = bubbleSort(array, this.compare);
+function defaultCompare<T>(a: T, b: T) {
+    if (a === b) {
+        return 0;
     }
 
-    /**
-     *
-     * @param element -
-     * @param unique -
-     */
-    insert(element: T, unique = true): Index {
-        let high = this.array.length - 1;
-        let low = 0;
-        let pos = -1;
-        let index = 0;
-        let ordering = 0;
+    return a > b ? 1 : -1;
+}
 
-        while (high >= low) {
-            index = (high + low) / 2 >>> 0;
-            ordering = this.compare(this.array[index], element);
-            if (ordering < 0) {
-                low  = index + 1;
-            } else if (ordering > 0) {
-                high = index - 1;
-            } else {
-                pos = index;
-                break;
+export class SortedArray<T = number> {
+    protected readonly compare: Comparator<T>;
+    protected elements: T[] = [];
+
+    constructor(array?: T[], comparator?: Comparator<T>) {
+        this.compare = comparator || defaultCompare;
+
+        if (array) {
+            for (let i = 0; i < array.length; i++) {
+                this.insert(array[i]);
             }
         }
-
-        if (pos === -1) {
-            pos = high;
-        }
-
-        pos++;
-
-        high = this.array.length-1;
-        while ((pos < high) && (this.compare(element, this.array[pos]) === 0)){
-            pos++;
-        }
-
-        index = this.array.length;
-        this.array.push(element);
-        while (index > pos) {
-            this.array[index] = this.array[--index];
-        }
-
-        this.array[pos] = element;
-
-        return pos;
     }
 
     /**
      *
-     * @param element -
-     * @param all -
+     * @param element
      */
-    delete(element: T, all = true): Index {
-        const index = binarySearch(this.array, element, this.compare);
+    insert(element: T): number {
+        const [index, found] = binarySearch(
+            this.elements,
+            element,
+            this.compare,
+            true,
+        )
 
-        if (index === -1) {
-            return index;
-        }
-
-        this.array.splice(index, 1);
+        found
+            ? this.elements[index] = element
+            : this.elements.splice(index, 0, element);
 
         return index;
     }
 
     /**
-     *
-     * @param index -
+     * @name search
+     * @description
+     * @param element The element to search
+     * @returns Index of the element in the array, or -1 if the element could not be found.
+     * @public
      */
-    get(index: Index): T {
-        return this.array[index];
-    }
-
-    /**
-     *
-     * @param element -
-     */
-    search(element: T): Index {
-        const index = binarySearch(this.array, element, this.compare);
+    search(element: T): number {
+        const [index, _] = binarySearch(
+            this.elements,
+            element,
+            this.compare,
+        )
 
         return index;
     }
 
     /**
+     * @name remove
+     * @param element
+     */
+    remove(element: T): T | -1 {
+        const i = this.search(element);
+        if (i === -1) {
+            return i;
+        }
+
+        return this.elements.splice(i, 1)[0];
+    }
+
+    /**
+     * @name removeRange
+     * @param from
+     * @param to
+     */
+    removeRange(from: T, to?: T) {
+        let open = this.search(from);
+        let close = to
+            ? this.search(to)
+            : this.elements.length;
+
+        while (open < close) {
+            this.elements.splice(open, 1);
+            open++;
+        }
+    }
+
+    /**
      *
-     * @param element -
+     */
+    clear() {
+        this.elements = [];
+    }
+
+    /**
+     *
+     * @param element
      */
     has(element: T): boolean {
-        const index = binarySearch(this.array, element, this.compare);
-
-        return (index !== -1);
+        return (this.search(element) !== -1);
     }
 
     /**
      *
-     * @param from -
-     * @param to -
+     * @param index
      */
-    slice(from: Index, to = this.array.length): SortedArray<T> {
-        const slice = this.array.slice(from, to);
-        const sortedArray = new SortedArray<T>(slice, this.compare);
-
-        return sortedArray;
+    at(index: number) {
+        return this.elements.at(index);
     }
 
-    /**
-     *
-     * @param from -
-     * @param to -
-     */
-    splice(from: Index, to = this.array.length): SortedArray<T> {
-        const splice = this.array.splice(from, to);
-        const sortedArray = new SortedArray<T>(splice, this.compare);
+    lt(element: T) {
 
-        return sortedArray;
     }
 
-    /**
-     *
-     * @param array -
-     */
-    concat(array: T[] | SortedArray<T>): SortedArray<T>{
-        const one = array instanceof SortedArray ? array.toArray() : array;
-        const two = this.array.slice(0);
-        const tree = one.concat(two);
-        const sortedArray = new SortedArray<T>(tree, this.compare);
+    lte(element: T) {
+        let index = this.search(element);
+        let ordering;
 
-        return sortedArray;
-    }
-
-    /**
-     *
-     * @param array -
-     */
-    merge(array: T[] | SortedArray<T>): Size {
-        for (const element of array) {
-            this.insert(element);
+        if (index === -1) {
+            return -1
         }
 
-        return this.array.length;
-    }
-
-    /**
-     *
-     */
-    first(): T | undefined {
-        return this.array.at(0);
-    }
-
-    /**
-     *
-     */
-    last(): T | undefined {
-        return this.array.at(-1);
-    }
-
-    /**
-     *
-     * @param separator
-     */
-    join(separator: string): string {
-        return this.array.join(separator);
-    }
-
-    /**
-     *
-     */
-    toArray(): T[] {
-        return this.array.slice(0);
-    }
-
-    get length() {
-        return this.array.length;
-    }
-
-    [Symbol.iterator]() {
-        let i = 0;
-        const array = this.array;
-
-        return {
-            next() {
-                if (i < array.length - 1) {
-                    i = i + 1;
-
-                    return {
-                        value: array[i],
-                        done: false
-                    }
-                }
-
-                return {
-                    value: array[i],
-                    done: true
-                }
+        for (; index >= 0; index--) {
+            ordering = this.compare(this.elements[index], element);
+            if (ordering <= 0) {
+                return index
             }
         }
+
+        return -1
+    }
+
+    gt(element: T) {
+
+    }
+
+    gte(element: T) {
+
+    }
+
+    slice(from?: number, to?: number): SortedArray<T> {
+        return new SortedArray<T>(this.elements.slice(from, to), this.compare);
+    }
+
+    getArray(): T[] {
+        return this.elements.slice(0);
     }
 }

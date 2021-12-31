@@ -1,19 +1,40 @@
-import { binarySearch } from '../src/binarySearch';
-import { compareNumbers } from '../src/compareNumbers';
+import { binarySearch, defaultComparator } from '../src/helpers';
 
-describe('Binary search', () => {
-    it('Search in array of numbers', () => {
-        const ARRAY = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-        const SEARCH_ELEMENT = 3;
-        const EXPECTED_INDEX = 3;
+describe('Binary search function', () => {
+    it('Should return [1, true]', () => {
+        const EXPECTED_INDEX = 1;
+        const [index, found] = binarySearch(
+            [1, 2, 3, 4, 5],
+            2,
+            defaultComparator,
+        );
 
-        expect(binarySearch(ARRAY, SEARCH_ELEMENT, compareNumbers)).toBe(EXPECTED_INDEX);
+        expect(index).toBe(EXPECTED_INDEX);
+        expect(found).toBeTruthy();
     })
-    it('Search near index', () => {
-        const ARRAY = [0, 1, 2, 4, 5, 6, 7, 8, 9];
-        const SEARCH_ELEMENT = 3;
-        const EXPECTED_INDEX = 3;
 
-        expect(binarySearch(ARRAY, SEARCH_ELEMENT, compareNumbers, true)).toBe(EXPECTED_INDEX);
+    it('Should return [-1, false]', () => {
+        const EXPECTED_INDEX = -1;
+        const [index, found] = binarySearch(
+            [1, 2, 3, 4, 5],
+            10,
+            defaultComparator,
+        );
+
+        expect(index).toBe(EXPECTED_INDEX);
+        expect(found).toBeFalsy();
+    })
+
+    it('Should return index of nearest element', () => {
+        const EXPECTED_INDEX = 3;
+        const [index, found] = binarySearch(
+            [1, 2, 3, 5, 6],
+            4,
+            defaultComparator,
+            true,
+        );
+
+        expect(index).toBe(EXPECTED_INDEX);
+        expect(found).toBeFalsy();
     })
 })
